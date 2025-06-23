@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Active Cutting Sessions{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Active Cutting Sessions</h2>
+        <a href="{{ url_for('start_work_form') }}" class="btn btn-primary">Start New Work Session</a>
+    </div>
+
+    {% if active_sessions %}
+        <ul class="list-group">
+            {% for session in active_sessions %}
+                <li class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">Work Order: {{ session.work_order_code }}</h5>
+                        <small class="text-muted">Last updated: {{ session.updated_at.strftime('%Y-%m-%d') }}</small>
+                    </div>
+                    <p class="mb-1">
+                        <strong>Model No:</strong> {{ session.model_no }} <br>
+                        <strong>Current Lot:</strong> <span class="badge badge-info">{{ session.active_paper_lot_number or 'N/A' }}</span> |
+                        <strong>Status:</strong> <span class="badge badge-{{ 'warning' if session.status == 'Ongoing' else 'secondary' }}">{{ session.status }}</span>
+                    </p>
+                    <p class="mb-1">
+                        <strong>Progress:</strong> {{ session.total_cuts_completed_for_session }} / {{ session.total_cuts_planned }} cuts total. <br>
+                        {% if session.model_no == '4500' or session.model_no == '6000' %}
+                            Step {{session.current_step}}: {{session.cuts_completed_in_current_step}} /
+                            {% if session.current_step == 1 %}{{session.cuts_planned_step1}}{% elif session.current_step == 2 %}{{session.cuts_planned_step2}}{% else %}N/A{% endif %} cuts.
+                        {% endif %}
+                    </p>
+                    <a href="{{ url_for('work_interface', session_id=session.id) }}" class="btn btn-outline-primary btn-sm mt-2">View/Continue Session</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            No active cutting sessions. <a href="{{ url_for('start_work_form') }}" class="alert-link">Start a new one!</a>
+        </div>
+    {% endif %}
+{% endblock %}

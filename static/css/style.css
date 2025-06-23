@@ -1,0 +1,23 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding-top: 70px; /* Account for fixed navbar */
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+.card-header h5 {
+    margin-bottom: 0;
+}
+
+.badge {
+    font-size: 90%;
+}
+
+/* Add more custom styles for a "beautiful UI" */
+.btn-lg.py-3 { /* Make Log Cut button a bit taller */
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    font-size: 1.25rem;
+}

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Session Report - {{ session.work_order_code }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #fff;
+            color: #333;
+        }
+        h2 {
+            border-bottom: 2px solid #333;
+            padding-bottom: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f0f0f0;
+        }
+        img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin-top: 20px;
+            border: 1px solid #ccc;
+        }
+        p {
+            margin: 6px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Cutting Session Report</h2>
+
+    <p><strong>Work Order:</strong> {{ session.work_order_code }}</p>
+    <p><strong>Model No:</strong> {{ session.model_no }}</p>
+    <p><strong>Total Cuts:</strong> {{ session.total_cuts_completed_for_session }} / {{ session.total_cuts_planned }}</p>
+    <p><strong>Status:</strong> {{ session.status }}</p>
+    <p><strong>Completed On:</strong> {{ session.updated_at.strftime('%Y-%m-%d') }}</p>
+
+    <h3>Paper Lot Usage History</h3>
+
+    {# --- DYNAMIC IMAGE DISPLAY FOR PDF REPORT --- #}
+    {% if session.model_no == '4500' %}
+        {# Path for Model 4500 image #}
+        <img src="static/machinecutting.JPG" alt="Model 4500 Cutting Machine" height="200" width="300">
+    {% elif session.model_no == '6000' %}
+        {# Path for Model 6000 image. Make sure this image exists in your 'static/' folder! #}
+        <img src="static/manufactering2image.jpg"  alt="Model 6000 Cutting Machine" height="7000" width="00">
+    {% else %}
+        {# Fallback for any other model or if model_no is missing #}
+        <img src="static/default_machine.JPG" alt="Default Cutting Machine">
+    {% endif %}
+    {# --- END DYNAMIC IMAGE DISPLAY --- #}
+
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Lot Number</th>
+                <th>Cuts Made</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lot in lot_history %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ lot.paper_lot_number }}</td>
+                <td>{{ lot.cuts_made_with_this_lot }}</td>
+                <td>{{ lot.start_time_for_lot.strftime('%Y-%m-%d') }}</td>
+                <td>{{ lot.end_time_for_lot.strftime('%Y-%m-%d') if lot.end_time_for_lot else 'Active' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>

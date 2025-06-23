@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}Start New Cutting Session{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-3">
+    <h2>Start New Cutting Session</h2>
+</div>
+
+<form method="POST" action="{{ url_for('create_session') }}" class="mt-4">
+    <div class="form-group">
+        <label for="work_order_code_select">Work Order (from Zoho):</label>
+        <select name="work_order_code" id="work_order_code_select" class="form-control" required>
+            <option value="" disabled selected>Select a Work Order</option>
+            {% if work_orders %}
+                {% for wo in work_orders %}
+                    <option value="{{ wo.id }}" data-name="{{ wo.name }}">{{ wo.name }} (ID: {{ wo.id }})</option>
+                {% endfor %}
+            {% else %}
+                <option value="" disabled>Could not load Zoho Work Orders.</option>
+            {% endif %}
+            <option value="MANUAL-INPUT-WO">--- Enter Work Order Manually Below ---</option>
+        </select>
+        <small class="form-text text-muted">If your Work Order isn't listed, ensure Zoho integration is correct or select manual entry.</small>
+        <input type="hidden" id="work_order_name_hidden" name="work_order_name">
+    </div>
+
+    <div class="form-group" id="manual_work_order_group" style="display:none;">
+        <label for="manual_work_order_code_input_field">Manual Work Order Code:</label>
+        <input type="text" id="manual_work_order_code_input_field" class="form-control">
+    </div>
+
+    <div class="form-group" id="manual_work_order_name_group" style="display:none;">
+        <label for="manual_work_order_name_input_field">Manual Work Order Name:</label>
+        <input type="text" id="manual_work_order_name_input_field" class="form-control">
+    </div>
+
+    <div class="form-group">
+        <label for="model_no">Model No:</label>
+        <select name="model_no" id="model_no" class="form-control" required onchange="toggleModelFields()">
+            <option value="" disabled selected>Select a Model</option>
+            <option value="4500">4500</option>
+            <option value="6000">6000</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="initial_paper_lot_number">Initial Paper Lot Number:</label>
+        <input type="text" name="initial_paper_lot_number" id="initial_paper_lot_number" class="form-control" required placeholder="e.g., LOT-ABC-789">
+    </div>
+
+    <div id="model_4500_cutting_plan">
+        <h4 class="mt-4">Cutting Plan (Model 4500)</h4>
+        <div class="form-row">
+            <div class="form-group col-md-4">
+                <label for="total_cuts_4500">Total Cuts:</label>
+                <input type="number" name="total_cuts" id="total_cuts_4500" class="form-control" value="68" readonly>
+            </div>
+            <div class="form-group col-md-4">
+                <label for="cuts_step1_4500">Step 1 Cuts:</label>
+                <input type="number" name="cuts_step1" id="cuts_step1_4500" class="form-control" value="34" readonly>
+            </div>
+            <div class="form-group col-md-4">
+                <label for="cuts_step2_4500">Step 2 Cuts:</label>
+                <input type="number" name="cuts_step2" id="cuts_step2_4500" class="form-control" value="34" readonly>
+            </div>
+        </div>
+    </div>
+
+    <div id="model_6000_cutting_plan" style="display: none;">
+        <h4 class="mt-4">Cutting Plan (Model 6000)</h4>
+        <div class="form-row">
+            <div class="form-group col-md-4">
+                <label for="total_cuts_6000">Total Cuts:</label>
+                <input type="number" name="total_cuts" id="total_cuts_6000" class="form-control" value="83" readonly>
+            </div>
+            <div class="form-group col-md-4">
+                <label for="cuts_step1_6000">Main Cuts (Step 1):</label>
+                <input type="number" name="cuts_step1" id="cuts_step1_6000" class="form-control" value="68" readonly>
+            </div>
+            <div class="form-group col-md-4">
+                <label for="cuts_step2_6000">Aux Cuts (Step 2):</label>
+                <input type="number" name="cuts_step2" id="cuts_step2_6000" class="form-control" value="15" readonly>
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-success btn-lg mt-3">Start Session</button>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // This function must be in the global scope to be called by `onchange`
+    function toggleModelFields() {
+        const model = document.getElementById('model_no').value;
+        const plan4500 = document.getElementById('model_4500_cutting_plan');
+        const plan6000 = document.getElementById('model_6000_cutting_plan');
+
+        // Get all input elements within each plan
+        const inputs4500 = plan4500.querySelectorAll('input[name^="total_cuts"], input[name^="cuts_step1"], input[name^="cuts_step2"]');
+        const inputs6000 = plan6000.querySelectorAll('input[name^="total_cuts"], input[name^="cuts_step1"], input[name^="cuts_step2"]');
+
+        if (model === '4500') {
+            plan4500.style.display = 'block';
+            plan6000.style.display = 'none';
+
+            // Enable inputs for 4500 so they are submitted
+            inputs4500.forEach(input => input.disabled = false);
+            // Disable inputs for 6000 so they are NOT submitted
+            inputs6000.forEach(input => input.disabled = true);
+
+            // Re-assign the 'name' attribute for total_cuts to the 4500 field
+            document.getElementById('total_cuts_4500').setAttribute('name', 'total_cuts');
+
+        } else if (model === '6000') {
+            plan4500.style.display = 'none';
+            plan6000.style.display = 'block';
+
+            // Disable inputs for 4500 so they are NOT submitted
+            inputs4500.forEach(input => input.disabled = true);
+            // Enable inputs for 6000 so they are submitted
+            inputs6000.forEach(input => input.disabled = false);
+
+            // Re-assign the 'name' attribute for total_cuts to the 6000 field
+            document.getElementById('total_cuts_6000').setAttribute('name', 'total_cuts');
+
+        } else {
+            // If no model is selected, hide and disable both
+            plan4500.style.display = 'none';
+            plan6000.style.display = 'none';
+            inputs4500.forEach(input => input.disabled = true);
+            inputs6000.forEach(input => input.disabled = true);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // --- Your custom Work Order logic (Unchanged) ---
+        const workOrderSelect = document.getElementById('work_order_code_select');
+        const manualWorkOrderGroup = document.getElementById('manual_work_order_group');
+        const manualWorkOrderInputField = document.getElementById('manual_work_order_code_input_field');
+        const manualWorkOrderNameGroup = document.getElementById('manual_work_order_name_group');
+        const manualWorkOrderNameInputField = document.getElementById('manual_work_order_name_input_field');
+        const workOrderNameHidden = document.getElementById('work_order_name_hidden');
+
+        function toggleManualInput(isManual) {
+            if (isManual) {
+                manualWorkOrderGroup.style.display = 'block';
+                manualWorkOrderInputField.setAttribute('name', 'work_order_code');
+                manualWorkOrderNameGroup.style.display = 'block';
+                manualWorkOrderNameInputField.setAttribute('name', 'work_order_name');
+                workOrderSelect.removeAttribute('name');
+            } else {
+                manualWorkOrderGroup.style.display = 'none';
+                manualWorkOrderInputField.removeAttribute('name');
+                manualWorkOrderNameGroup.style.display = 'none';
+                manualWorkOrderNameInputField.removeAttribute('name');
+                workOrderSelect.setAttribute('name', 'work_order_code');
+            }
+        }
+
+        workOrderSelect.addEventListener('change', function () {
+            toggleManualInput(this.value === 'MANUAL-INPUT-WO');
+            if (this.value !== 'MANUAL-INPUT-WO') {
+                workOrderNameHidden.value = this.options[this.selectedIndex].dataset.name || '';
+            }
+        });
+        // --- End of your custom logic ---
+
+        // Initialize the correct view on page load
+        toggleModelFields(); // Call it once on load
+        if (workOrderSelect.value === 'MANUAL-INPUT-WO') {
+            toggleManualInput(true); // Re-evaluate manual input display if pre-selected
+        }
+    });
+</script>
+{% endblock %}
